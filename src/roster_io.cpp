@@ -3,22 +3,97 @@
 #include <fstream>
 #include <sstream>
 
-// TODO (Checkpoint 1): implement save_roster.
-// Remove [[maybe_unused]] from a parameter once you use it.
-bool save_roster([[maybe_unused]] const std::vector<Mech>& roster,
-                 [[maybe_unused]] const std::string& path) {
-    return false;
+bool save_roster(const std::vector<Mech>& roster, const std::string& path) {
+    std::ofstream file(path);
+    if (!file.is_open()) {
+        return false;
+    }
+
+    for (size_t i = 0; i < roster.size(); i++) {
+        file << roster[i].name() << ","
+             << roster[i].hp() << ","
+             << roster[i].attack() << ","
+             << roster[i].armor() << "\n";
+    }
+
+    return file.good();
 }
 
-// TODO (Checkpoints 2 and 3): implement load_roster.
-bool load_roster([[maybe_unused]] const std::string& path,
-                 [[maybe_unused]] std::vector<Mech>& roster,
-                 [[maybe_unused]] int& skipped_lines) {
-    return false;
+bool load_roster(const std::string& path, std::vector<Mech>& roster, int& skipped_lines) {
+    std::ifstream file(path);
+    if (!file.is_open()) {
+        return false;
+    }
+
+    std::vector<Mech> loaded_mechs;
+    skipped_lines = 0;
+    std::string line;
+
+    while (std::getline(file, line)) {
+        if (line.empty()) {
+            skipped_lines++;
+            continue;
+        }
+
+        std::stringstream ss(line);
+        std::string name_str, hp_str, attack_str, armor_str, extra;
+
+        if (!std::getline(ss, name_str, ',') ||
+            !std::getline(ss, hp_str, ',') ||
+            !std::getline(ss, attack_str, ',') ||
+            !std::getline(ss, armor_str, ',') ||
+            std::getline(ss, extra, ',')) {
+            skipped_lines++;
+            continue;
+        }
+
+        if (name_str.empty() || hp_str.empty() || attack_str.empty() || armor_str.empty()) {
+            skipped_lines++;
+            continue;
+        }
+
+        std::stringstream hp_ss(hp_str);
+        int hp = 0;
+        hp_ss >> hp;
+        if (hp_ss.fail() || !hp_ss.eof()) {
+            skipped_lines++;
+            continue;
+        }
+
+        std::stringstream attack_ss(attack_str);
+        int attack = 0;
+        attack_ss >> attack;
+        if (attack_ss.fail() || !attack_ss.eof()) {
+            skipped_lines++;
+            continue;
+        }
+
+        std::stringstream armor_ss(armor_str);
+        int armor = 0;
+        armor_ss >> armor;
+        if (armor_ss.fail() || !armor_ss.eof()) {
+            skipped_lines++;
+            continue;
+        }
+
+        if (hp < 1 || attack < 0 || armor < 0) {
+            skipped_lines++;
+            continue;
+        }
+
+        loaded_mechs.push_back(Mech(name_str, hp, attack, armor));
+    }
+
+    roster = loaded_mechs;
+    return true;
 }
 
-// TODO (Checkpoint 4): implement append_line.
-bool append_line([[maybe_unused]] const std::string& path,
-                 [[maybe_unused]] const std::string& text) {
-    return false;
+bool append_line(const std::string& path, const std::string& text) {
+    std::ofstream file(path, std::ios::app);
+    if (!file.is_open()) {
+        return false;
+    }
+
+    file << text << "\n";
+    return file.good();
 }
